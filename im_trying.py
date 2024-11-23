@@ -1,6 +1,7 @@
 import csv
 import argparse
 
+
 def opening_file(fileName):
     with open(fileName, "r") as file:
         csv_reader = csv.reader(file, delimiter='\t')
@@ -10,7 +11,8 @@ def opening_file(fileName):
             rows.append(line)
     return header, rows
 
-def counting_medals(output_list, country, year):
+
+def counting_medals_1(output_list, country, year):
     gold_medals = 0
     silver_medals = 0
     bronze_medals = 0
@@ -24,6 +26,7 @@ def counting_medals(output_list, country, year):
     print("\nOverall {} in {} got: \nGold medals: {} \nSilver medals: {} \nBronze medals: {} \n".format(country, year, gold_medals, silver_medals, bronze_medals))
     return output_list
 
+
 def medals_1(fileName, medals):
     header, rows = opening_file(fileName)
     COUNTRY = header.index('Team')
@@ -35,7 +38,7 @@ def medals_1(fileName, medals):
 
     country = medals[0]
     year = medals[1]
-    output_list = []
+    output_list = []               #[winners_name, sport, medal_type]
     counter_country = 0
     counter_year = 0
     for row in rows:
@@ -57,21 +60,41 @@ def medals_1(fileName, medals):
         print("\nSorry! There were only {} Olympic winners from {} in {}.\n".format(len(output_list), country, year))
         for winner in output_list:
             print("{} - {} - {}".format(winner[0], winner[1], winner[2]))
-        return counting_medals(output_list, country, year)
+        return counting_medals_1(output_list, country, year)
     else:
         for winner in output_list[:10]:
             print("{} - {} - {}".format(winner[0], winner[1], winner[2]))
-        return counting_medals(output_list, country, year)
+        return counting_medals_1(output_list, country, year)
 
+
+def total_2(fileName, year):
+    header, rows = opening_file(fileName)
+    COUNTRY = header.index('Team')
+    YEAR = header.index('Year')
+    MEDAL = header.index('Medal')
+    top_medals = ["Gold", "Silver", "Bronze"]
+    total_counter = {}            #country : [num_gold_medals, num_silver_medals, num_bronze_medals]
+    for row in rows:
+        if row[YEAR]==year and row[MEDAL] in top_medals:
+            if not row[COUNTRY] in total_counter:
+                total_counter[row[COUNTRY]] = [0, 0, 0]
+            medal = row[MEDAL]
+            total_counter[row[COUNTRY]][top_medals.index(medal)] += 1
+    if total_counter=={}:
+        print("\nSorry! There is no information about {} year in our dataset.".format(year))
+    else:
+        for country in total_counter.items():
+            print("{:<15} -- Gold: {} -- Silver: {} -- Bronze: {}".format(country[0], country[1][0], country[1][1], country[1][2]))
 
 
 
 parser=argparse.ArgumentParser()
 parser.add_argument("fileName", type=str, help="getting name of file to work with")
 parser.add_argument("-medals", nargs=2, help="getting the country and year")
-parser.add_argument("-output", action='store', help="getting name to output information", dest='output')
-
+parser.add_argument("-output", action='store', help="getting name of file to output information", dest='output')
+parser.add_argument("-total", type=str, help="getting the year to count total")
 args=parser.parse_args()
+
 if args.medals:
     result = medals_1(args.fileName, args.medals)
     if args.output and result!=0:
@@ -79,5 +102,7 @@ if args.medals:
             for i in result:
                 file_output.write(str(i))
             file_output.write('\n')
+if args.total:
+    total_2(args.fileName, args.total)
 
 
