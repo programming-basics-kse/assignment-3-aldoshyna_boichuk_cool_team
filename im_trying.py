@@ -88,7 +88,7 @@ def total_2(fileName, year):
             print("{:<15} -- Gold: {} -- Silver: {} -- Bronze: {}".format(country[0], country[1][0], country[1][1], country[1][2]))
 
 
-def country_input(rows, COUNTRY, NOC, countries):
+def country_input_check(rows, COUNTRY, NOC, countries):
     all_countries_and_codes_list = []
     for row in rows:
         if not row[COUNTRY] in all_countries_and_codes_list:
@@ -107,14 +107,14 @@ def country_input(rows, COUNTRY, NOC, countries):
     return countries
 
 
-def overall(fileName, countries):
+def overall_3(fileName, countries):
     header, rows = opening_file(fileName)
     COUNTRY = header.index('Team')
     YEAR = header.index('Year')
     NOC = header.index('NOC')
     MEDAL = header.index('Medal')
     top_medals = ["Gold", "Silver", "Bronze"]
-    countries = country_input(rows, COUNTRY, NOC, countries)
+    countries = country_input_check(rows, COUNTRY, NOC, countries)
     overall_counter = {}
     for country in countries:
         for row in rows:
@@ -137,6 +137,83 @@ def overall(fileName, countries):
             print("{}: \n \tyear: {}, number of medals: {}".format(country, top_year[0], top_year[1]))
         else:
             print("\nSorry! There is no information about {} country in our dataset.".format(country))
+
+
+def country_is_valid_4(rows, COUNTRY, NOC, country):
+    all_countries_and_codes_list = []
+    for row in rows:
+        if not row[COUNTRY] in all_countries_and_codes_list:
+            all_countries_and_codes_list.append(row[COUNTRY])
+        if not row[NOC] in all_countries_and_codes_list:
+            all_countries_and_codes_list.append(row[NOC])
+    if not country in all_countries_and_codes_list:
+        return False
+    return True
+
+
+def first_olympiad_4(rows, COUNTRY, NOC, YEAR, CITY, country):
+    first_olympiad_list = []  # [year, city]
+    for row in rows:
+        if row[COUNTRY] == country or row[NOC] == country:
+            if not [row[YEAR], row[CITY]] in first_olympiad_list:
+                first_olympiad_list.append([row[YEAR], row[CITY]])
+    first_olympiad = sorted(first_olympiad_list, key=lambda x: x[0])[0]
+    print(f"\nThe first time {country} participated in Olympics was in {first_olympiad[0]} in {first_olympiad[1]}.")
+
+
+def best_and_worst_olympiad_4(rows, COUNTRY, NOC, YEAR, MEDAL, country):
+    top_medals = ["Gold", "Silver", "Bronze"]
+    successful_olympiad_dict = {}   # year: gold, silver, bronze, total num of medals -> sort -> pick the most successful and the least
+    for row in rows:
+        if (row[COUNTRY] == country or row[NOC] == country) and row[MEDAL] in top_medals:
+            if not row[YEAR] in successful_olympiad_dict:
+                successful_olympiad_dict[row[YEAR]] = [0, 0, 0, 0]
+            successful_olympiad_dict[row[YEAR]][top_medals.index(row[MEDAL])] += 1
+            successful_olympiad_dict[row[YEAR]][3] += 1
+
+    successful_olympiad_dict = sorted(successful_olympiad_dict.items(), key=lambda x: x[1][3])
+    most_successful_olympiad = [x for x in successful_olympiad_dict if x[1][3] == successful_olympiad_dict[-1][1][3]]
+    most_successful_olympiad_sorted = ", ".join(sorted([x[0] for x in most_successful_olympiad]))
+    least_successful_olympiad = [x for x in successful_olympiad_dict if x[1][3] == successful_olympiad_dict[0][1][3]]
+    least_successful_olympiad_sorted = ", ".join(sorted([x[0] for x in least_successful_olympiad]))
+    print(
+        f"\nThe most successful olympiad of {country} was in {most_successful_olympiad_sorted} when it got {most_successful_olympiad[0][1][3]} medals in total.")
+    print(
+        f"\nThe least successful olympiad of {country} was in {least_successful_olympiad_sorted} when it got {least_successful_olympiad[0][1][3]} medals in total.")
+    return successful_olympiad_dict
+
+
+def average_num_medals_4(successful_olympiad_dict, country):
+    medals_total_list = [0, 0, 0]
+    for year in successful_olympiad_dict:
+        medals_total_list[0] += year[1][0]
+        medals_total_list[1] += year[1][1]
+        medals_total_list[2] += year[1][2]
+    print(f"\nThe average number of medals that {country} got on each Olympiad is: "
+          f"\nGold: {round((medals_total_list[0] / len(successful_olympiad_dict)), 1)} ({medals_total_list[0]} in total)"
+          f"\nSilver: {round((medals_total_list[1] / len(successful_olympiad_dict)), 1)} ({medals_total_list[1]} in total)"
+          f"\nBronze: {round((medals_total_list[2] / len(successful_olympiad_dict)), 1)} ({medals_total_list[2]} in total)")
+
+
+def interactive_4(fileName):
+    print("\nYou've switched to interactive mode!")
+    header, rows = opening_file(fileName)
+    COUNTRY = header.index('Team')
+    YEAR = header.index('Year')
+    CITY = header.index('City')
+    NOC = header.index('NOC')
+    MEDAL = header.index('Medal')
+
+    country = input("Enter the name or code of country you want to find out more about: ")
+    while not country_is_valid_4(rows, COUNTRY, NOC, country):
+        country = input(
+            "Sorry, this isn't a proper name or code of country. Try again. \nEnter the name or code of country you want to find out more about: ")
+
+    first_olympiad_4(rows, COUNTRY, NOC, YEAR, CITY, country)
+
+    successful_olympiad_dict = best_and_worst_olympiad_4(rows, COUNTRY, NOC, YEAR, MEDAL, country)
+
+    average_num_medals_4(successful_olympiad_dict, country)
 
 
 def top(fileName, arguments):
@@ -173,15 +250,13 @@ def top(fileName, arguments):
 
 
 
-
-
-
 parser=argparse.ArgumentParser()
 parser.add_argument("fileName", type=str, help="getting name of file to work with")
 parser.add_argument("-medals", nargs=2, help="getting the country and year")
 parser.add_argument("-output", action='store', help="getting name of file to output information", dest='output')
 parser.add_argument("-total", type=str, help="getting the year to count total")
 parser.add_argument("-overall", nargs='+', help="getting multiple names of countries")
+parser.add_argument("-interactive", action="store_true", help="switching to interactive mode")
 parser.add_argument("-top", nargs='+', help="getting multiple names of countries")
 args=parser.parse_args()
 
@@ -196,8 +271,9 @@ if args.medals:
 if args.total:
     total_2(args.fileName, args.total)
 if args.overall:
-    overall(args.fileName, args.overall)
+    overall_3(args.fileName, args.overall)
+if args.interactive:
+    interactive_4(args.fileName)
 if args.top:
     top(args.fileName, args.top)
-
 
