@@ -88,6 +88,24 @@ def total_2(fileName, year):
             print("{:<15} -- Gold: {} -- Silver: {} -- Bronze: {}".format(country[0], country[1][0], country[1][1], country[1][2]))
 
 
+def country_input(rows, COUNTRY, NOC, countries):
+    all_countries_and_codes_list = []
+    for row in rows:
+        if not row[COUNTRY] in all_countries_and_codes_list:
+            all_countries_and_codes_list.append(row[COUNTRY])
+        if not row[NOC] in all_countries_and_codes_list:
+            all_countries_and_codes_list.append(row[NOC])
+    for country in countries:
+        if not country in all_countries_and_codes_list:
+            index_country = countries.index(country)
+            for i in range(index_country+1, len(countries)):
+                new_country = " ".join(countries[index_country:i+1])
+                if new_country in all_countries_and_codes_list:
+                    countries[index_country] = new_country
+                    for j in range(index_country+1, i+1):
+                        countries.pop(j)
+    return countries
+
 
 def overall(fileName, countries):
     header, rows = opening_file(fileName)
@@ -96,6 +114,7 @@ def overall(fileName, countries):
     NOC = header.index('NOC')
     MEDAL = header.index('Medal')
     top_medals = ["Gold", "Silver", "Bronze"]
+    countries = country_input(rows, COUNTRY, NOC, countries)
     overall_counter = {}
     for country in countries:
         for row in rows:
