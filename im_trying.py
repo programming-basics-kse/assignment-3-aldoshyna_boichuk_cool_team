@@ -12,6 +12,25 @@ def opening_file(fileName):
     return header, rows
 
 
+def country_input_check(rows, COUNTRY, NOC, countries):
+    all_countries_and_codes_list = []
+    for row in rows:
+        if not row[COUNTRY] in all_countries_and_codes_list:
+            all_countries_and_codes_list.append(row[COUNTRY])
+        if not row[NOC] in all_countries_and_codes_list:
+            all_countries_and_codes_list.append(row[NOC])
+    for country in countries:
+        if not country in all_countries_and_codes_list:
+            index_country = countries.index(country)
+            for i in range(index_country+1, len(countries)):
+                new_country = " ".join(countries[index_country:i+1])
+                if new_country in all_countries_and_codes_list:
+                    countries[index_country] = new_country
+                    for j in range(index_country+1, i+1):
+                        countries.pop(j)
+    return countries
+
+
 def counting_medals_1(output_list, country, year):
     gold_medals = 0
     silver_medals = 0
@@ -35,9 +54,10 @@ def medals_1(fileName, medals):
     SPORT = header.index('Sport')
     MEDAL = header.index('Medal')
     NOC = header.index('NOC')
+    top_medals = ["Gold", "Silver", "Bronze"]
 
-    country = medals[0]
-    year = medals[1]
+    country = country_input_check(rows, COUNTRY, NOC, medals[:-1])[0]
+    year = medals[-1]
     output_list = []               #[winners_name, sport, medal_type]
     counter_country = 0
     counter_year = 0
@@ -46,7 +66,8 @@ def medals_1(fileName, medals):
             counter_country += 1
             if row[YEAR]==year:
                 counter_year += 1
-                output_list.append([row[NAME], row[SPORT], row[MEDAL]])
+                if row[MEDAL] in top_medals:
+                    output_list.append([row[NAME], row[SPORT], row[MEDAL]])
     if counter_country==0:
         print("\nSorry! There is no information about {} country in our dataset.".format(country))
         return 0
@@ -86,25 +107,6 @@ def total_2(fileName, year):
     else:
         for country in total_counter.items():
             print("{:<15} -- Gold: {} -- Silver: {} -- Bronze: {}".format(country[0], country[1][0], country[1][1], country[1][2]))
-
-
-def country_input_check(rows, COUNTRY, NOC, countries):
-    all_countries_and_codes_list = []
-    for row in rows:
-        if not row[COUNTRY] in all_countries_and_codes_list:
-            all_countries_and_codes_list.append(row[COUNTRY])
-        if not row[NOC] in all_countries_and_codes_list:
-            all_countries_and_codes_list.append(row[NOC])
-    for country in countries:
-        if not country in all_countries_and_codes_list:
-            index_country = countries.index(country)
-            for i in range(index_country+1, len(countries)):
-                new_country = " ".join(countries[index_country:i+1])
-                if new_country in all_countries_and_codes_list:
-                    countries[index_country] = new_country
-                    for j in range(index_country+1, i+1):
-                        countries.pop(j)
-    return countries
 
 
 def overall_3(fileName, countries):
@@ -249,10 +251,9 @@ def top(fileName, arguments):
 
 
 
-
 parser=argparse.ArgumentParser()
 parser.add_argument("fileName", type=str, help="getting name of file to work with")
-parser.add_argument("-medals", nargs=2, help="getting the country and year")
+parser.add_argument("-medals", nargs='+', help="getting the country and year")
 parser.add_argument("-output", action='store', help="getting name of file to output information", dest='output')
 parser.add_argument("-total", type=str, help="getting the year to count total")
 parser.add_argument("-overall", nargs='+', help="getting multiple names of countries")
