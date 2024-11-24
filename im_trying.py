@@ -105,6 +105,7 @@ def overall(fileName, countries):
                         if row[YEAR] in overall_counter[country]:
                             # print(row)
                             overall_counter[country][row[YEAR]] += 1
+                            # print(row[1], row[COUNTRY], row[MEDAL])
                         else:
                             overall_counter[country][row[YEAR]] = 1
                     else:
@@ -119,6 +120,41 @@ def overall(fileName, countries):
             print("\nSorry! There is no information about {} country in our dataset.".format(country))
 
 
+def top(fileName, arguments):
+    header, rows = opening_file(fileName)
+    MEDAL = header.index('Medal')
+    SEX = header.index('Sex')
+    AGE = header.index('Age')
+    NAME = header.index('Name')
+    arguments1 = []
+    arguments2 = []
+    for i in arguments:
+        if i.isalpha():
+            arguments1.append(i)
+        elif i.isdigit():
+            arguments2.append(i)
+    top_medals = ["Gold", "Silver", "Bronze"]
+    age_dic = {1:[*range(18,25,1)], 2:[*range(25,35,1)], 3:[*range(35,50,1)], 4:[*range(50,150,1)]}
+    overall_players = {}
+    for i in arguments1:
+        for j in arguments2:
+            for row in rows:
+                if row[AGE] == 'NA':
+                    continue
+                if row[SEX] == i and int(row[AGE]) in age_dic[int(j)] and row[MEDAL] in top_medals:
+                    if row[NAME] in overall_players:
+                        overall_players[row[NAME]]+=1
+                    else:
+                        overall_players[row[NAME]] = 1
+            top_player = sorted(overall_players.items(), key=lambda x: x[1], reverse=True)[0]
+            print(top_player)
+            overall_players = {}
+
+
+
+
+
+
 
 
 parser=argparse.ArgumentParser()
@@ -127,8 +163,9 @@ parser.add_argument("-medals", nargs=2, help="getting the country and year")
 parser.add_argument("-output", action='store', help="getting name of file to output information", dest='output')
 parser.add_argument("-total", type=str, help="getting the year to count total")
 parser.add_argument("-overall", nargs='+', help="getting multiple names of countries")
+parser.add_argument("-top", nargs='+', help="getting multiple names of countries")
 args=parser.parse_args()
-# print(args)
+
 
 if args.medals:
     result = medals_1(args.fileName, args.medals)
@@ -141,5 +178,7 @@ if args.total:
     total_2(args.fileName, args.total)
 if args.overall:
     overall(args.fileName, args.overall)
+if args.top:
+    top(args.fileName, args.top)
 
 
