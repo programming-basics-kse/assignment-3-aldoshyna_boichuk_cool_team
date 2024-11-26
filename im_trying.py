@@ -231,6 +231,9 @@ def top(fileName, arguments):
             arguments1.append(i)
         elif i.isdigit():
             arguments2.append(i)
+    if arguments2 == [] or arguments1== []:
+        print('Please enter sex in form of "M" or "F", and age range: ')
+        return False
     top_medals = ["Gold", "Silver", "Bronze"]
     age_dic = {1:[*range(18,25,1)], 2:[*range(25,35,1)], 3:[*range(35,50,1)], 4:[*range(50,150,1)]}
     overall_players = {}
